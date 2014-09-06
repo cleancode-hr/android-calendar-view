@@ -1,5 +1,9 @@
 <resources>
 
     <string name="app_name">android-calendar-view</string>
-
+    <string-array name="calendar_modes">
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
+    </string-array>
 </resources>
