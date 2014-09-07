@@ -1,11 +1,11 @@
 package hr.cleancode.calendar;
 
-import hr.cleancode.calendar.CalendarDisplayView.CalendarItem;
 import hr.cleancode.calendar.CalendarDisplayView.CalendarMode;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 
 import android.app.Activity;
@@ -15,9 +15,10 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.AdapterView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Spinner;
 
@@ -78,9 +79,9 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		Spinner mode = (Spinner) findViewById(R.id.spinner1);
-		mode.setSelection(2);
-		mode.setOnItemSelectedListener(new OnItemSelectedListener() {
+		final Spinner modeSelector = (Spinner) findViewById(R.id.spinner1);
+		modeSelector.setSelection(2);
+		modeSelector.setOnItemSelectedListener(new OnItemSelectedListener() {
 			@Override
 			public void onItemSelected(AdapterView<?> p_parent, View p_view,
 					int p_position, long p_id) {
@@ -118,10 +119,48 @@ public class MainActivity extends Activity {
 		
 		calendarView = (CalendarDisplayView) findViewById(R.id.calendarDisplayView1);
 		calendarView.setMode(CalendarMode.Month);
-		
+		calendarView.setOnClickListener(new CalendarViewOnClickListener() {
+			
+			@Override
+			public void onClick(CalendarMode mode, LocalDate selectedDate,
+					Object selectedItem) {
+				if (selectedItem != null){
+					Toast.makeText(MainActivity.this, "Selected item: " + selectedItem.toString(), Toast.LENGTH_SHORT).show();
+				}
+				else {
+					calendarView.setSelectedDate(selectedDate);
+				}
+				
+			}
+
+			@Override
+			public void onLongClick(CalendarMode mode, LocalDate selectedDate,
+					Object selectedItem) {
+				if (mode == CalendarMode.Month) {
+					calendarView.setModeAndDate(CalendarMode.Week, selectedDate);
+					modeSelector.setSelection(1);
+				}
+				else if (selectedItem != null){
+					Toast.makeText(MainActivity.this, "Selected item: " + selectedItem.toString(), Toast.LENGTH_SHORT).show();
+				}
+				else if (mode == CalendarMode.Week) {
+					calendarView.setModeAndDate(CalendarMode.Day, selectedDate);
+					modeSelector.setSelection(0);
+				}
+			}
+		});
+		List<String> dayOfWeekNames = new ArrayList<>();
+		dayOfWeekNames.add("Pon");
+		dayOfWeekNames.add("Uto");
+		dayOfWeekNames.add("Sri");
+		dayOfWeekNames.add("Čet");
+		dayOfWeekNames.add("Pet");
+		dayOfWeekNames.add("Sub");
+		dayOfWeekNames.add("Ned");
+		calendarView.setDayOfWeekNames(dayOfWeekNames);
 		List<CalendarItem> testItems = new ArrayList<>();
 		for (int i = - 200; i < 200; i++) {
-			testItems.add(new CalendarDisplayView.CalendarItem(LocalDateTime.now().plusHours(i * 4), LocalDateTime.now().plusHours(i * 4 + 1), "Event " + String.valueOf(i)));
+			testItems.add(new CalendarItem(LocalDateTime.now().plusHours(i * 4), LocalDateTime.now().plusHours(i * 4 + 1), "Event " + String.valueOf(i)));
 		}
 		calendarView.addItems(testItems);
 		int[] size = getRealDeviceSizeInPixels(this);
