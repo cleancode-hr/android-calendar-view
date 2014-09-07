@@ -21,19 +21,19 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class CalendarDisplayView extends LinearLayout {
-	public CalendarDisplayView(Context p_context, AttributeSet p_attrs,
-			int p_defStyle) {
-		super(p_context, p_attrs, p_defStyle);
+	public CalendarDisplayView(Context context, AttributeSet attrs,
+			int defStyle) {
+		super(context, attrs, defStyle);
 		setOrientation(VERTICAL);
 	}
 
-	public CalendarDisplayView(Context p_context, AttributeSet p_attrs) {
-		super(p_context, p_attrs);
+	public CalendarDisplayView(Context context, AttributeSet attrs) {
+		super(context, attrs);
 		setOrientation(VERTICAL);
 	}
 
-	public CalendarDisplayView(Context p_context) {
-		super(p_context);
+	public CalendarDisplayView(Context context) {
+		super(context);
 		setOrientation(VERTICAL);
 	}
 
@@ -48,12 +48,12 @@ public class CalendarDisplayView extends LinearLayout {
 		private LocalDateTime eventEnd;
 		private Object data;
 		
-		public CalendarItem(LocalDateTime p_eventStart,
-				LocalDateTime p_eventEnd, Object p_data) {
+		public CalendarItem(LocalDateTime eventStart,
+				LocalDateTime eventEnd, Object data) {
 			super();
-			eventStart = p_eventStart;
-			eventEnd = p_eventEnd;
-			data = p_data;
+			this.eventStart = eventStart;
+			this.eventEnd = eventEnd;
+			this.data = data;
 		}
 
 		public LocalDateTime getEventStart() {
@@ -69,11 +69,11 @@ public class CalendarDisplayView extends LinearLayout {
 		}
 
 		@Override
-		public int compareTo(CalendarItem p_another) {
-			if (p_another == null) {
+		public int compareTo(CalendarItem another) {
+			if (another == null) {
 				return -1;
 			}
-			return eventStart.compareTo(p_another.getEventStart());
+			return eventStart.compareTo(another.getEventStart());
 		}
 	}
 	
@@ -89,12 +89,19 @@ public class CalendarDisplayView extends LinearLayout {
 	}
 
 	private CalendarMode mode = CalendarMode.Month;
-	private LocalDate startDate = LocalDate.now();
+	private LocalDate selectedDate = LocalDate.now();
 	private List<CalendarItem> items = new ArrayList<CalendarDisplayView.CalendarItem>();
 	private int daysToShow = 7;
+	private int gridWidth = 600;
 	
+	public void setGridWidth(int gridWidth) {
+		this.gridWidth = gridWidth;
+		render();
+	}
+
 	public void setDaysToShow(int daysToShow) {
 		this.daysToShow = daysToShow;
+		render();
 	}
 	public void addItems(List<CalendarItem> itemsToAdd) {
 		items.addAll(itemsToAdd);
@@ -105,16 +112,18 @@ public class CalendarDisplayView extends LinearLayout {
 	private EventViewCreator eventViewCreator = new EventViewCreator() {
 		@Override
 		public View createView(
-				Object p_item, 
-				CalendarMode p_mode,
-				ViewGroup p_parent) {
+				Object item, 
+				CalendarMode mode,
+				ViewGroup parent) {
 			TextView result = new TextView(getContext());
-			result.setTextSize(8);
-			if (p_item == null) {
+			if (mode == CalendarMode.Month) {
+				result.setTextSize(8);
+			}
+			if (item == null) {
 				result.setText("");
 			}
 			else {
-				result.setText(p_item.toString());
+				result.setText(item.toString());
 			}
 			return result;
 		}
@@ -129,12 +138,12 @@ public class CalendarDisplayView extends LinearLayout {
 		render();
 	}
 
-	public LocalDate getStartDate() {
-		return startDate;
+	public LocalDate getSelectedDate() {
+		return selectedDate;
 	}
 
-	public void setStartDate(LocalDate startDate) {
-		this.startDate = startDate;
+	public void setSelectedDate(LocalDate selectedDate) {
+		this.selectedDate = selectedDate;
 		render();
 	}
 
@@ -147,13 +156,13 @@ public class CalendarDisplayView extends LinearLayout {
 		removeAllViews();
 		switch (this.mode) {
 			case Day:
-				addView(createDayView(this.startDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+				addView(createDayView(this.selectedDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 				break;
 			case Week:
-				addView(createWeekView(this.startDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+				addView(createWeekView(this.selectedDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 				break;
 			case Month:
-				addView(createMonthView(this.startDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+				addView(createMonthView(this.selectedDate), LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 				break;
 		}
 	}
@@ -166,11 +175,13 @@ public class CalendarDisplayView extends LinearLayout {
 		}
 		return result;
 	}
+	
 	private View createDayHeaderView(LocalDate date) {
 		TextView dateInfo = new TextView(getContext());
 		dateInfo.setText(date.toString());
 		return dateInfo;
 	}
+	
 	private View createDayView(LocalDate date) {
 		LinearLayout result = new LinearLayout(getContext());
 		result.setOrientation(VERTICAL);
@@ -204,7 +215,7 @@ public class CalendarDisplayView extends LinearLayout {
 		LocalDate startDate = getWeekMonday(date);
 		for (int i = 0; i < daysToShow; i ++) {
 			View dayView = createDayView(startDate.plusDays(i));
-			LinearLayout.LayoutParams dayViewParams = new LayoutParams(100, LinearLayout.LayoutParams.WRAP_CONTENT);
+			LinearLayout.LayoutParams dayViewParams = new LayoutParams(Math.round(gridWidth / daysToShow), LinearLayout.LayoutParams.WRAP_CONTENT);
 			daysView.addView(dayView, dayViewParams);
 		}
 		result.addView(daysView, new LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -232,7 +243,7 @@ public class CalendarDisplayView extends LinearLayout {
 		gridLayout.setColumnCount(daysToShow);
 		for (int i = 0 ; i < daysToShow; i++) {
 			GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(0, 1, GridLayout.CENTER), GridLayout.spec(i, 1, GridLayout.CENTER));
-			params.width = 100;
+			params.width = Math.round(gridWidth / daysToShow);
 			params.setGravity(Gravity.CENTER_HORIZONTAL);
 			gridLayout.addView(createDayHeader(daysOfWeek.get(i)), params);
 		}
@@ -260,7 +271,7 @@ public class CalendarDisplayView extends LinearLayout {
 			int col = currentDate.getDayOfWeek() - 1;
 			int row = Math.round((currentDate.getDayOfMonth() + getMonthStart(date).getDayOfWeek() - 1 - 1) / 7) + 1;
 			GridLayout.LayoutParams params = new GridLayout.LayoutParams(GridLayout.spec(row, 1, GridLayout.CENTER), GridLayout.spec(col, 1, GridLayout.CENTER));
-			params.width = 220;
+			params.width = Math.round(gridWidth / daysToShow);
 			params.height = 200;
 			params.leftMargin = 1;
 			params.topMargin = 1;
