@@ -234,16 +234,16 @@ public class CalendarDisplayView extends LinearLayout {
 		}
 		result.addView(dateInfo, dayHeaderParams);
 		
-		result.setOnClickListener(new OnClickListener() {
+		final OnClickListener clickListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				System.out.println("KLIK!!!!");
 				if (onClickListener != null) {
 					onClickListener.onClick(mode, date, null);
 				}
 			}
-		});
-		
-		result.setOnLongClickListener(new OnLongClickListener() {
+		}; 
+		final OnLongClickListener longClickListener = new OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View v) {
 				if (onClickListener != null) {
@@ -251,13 +251,17 @@ public class CalendarDisplayView extends LinearLayout {
 				}
 				return false;
 			}
-		});
+		};
+		result.setOnClickListener(clickListener);
+		result.setOnLongClickListener(longClickListener);
 		
-		ViewGroup scrollContent = null;
-		scrollContent = new ScrollView(getContext());
+		ScrollView scrollContent = new ScrollView(getContext());
+		scrollContent.setFillViewport(true);
 		
 		LinearLayout hours = new LinearLayout(getContext());
 		hours.setOrientation(LinearLayout.VERTICAL);
+		hours.setOnClickListener(clickListener);
+		hours.setOnLongClickListener(longClickListener);;
 		boolean odd = false;
 		for (final CalendarItem item : getItemsForPeriod(date.toLocalDateTime(LocalTime.MIDNIGHT), date.plusDays(1).toLocalDateTime(LocalTime.MIDNIGHT))) {
 			LinearLayout itemView = new LinearLayout(getContext());
